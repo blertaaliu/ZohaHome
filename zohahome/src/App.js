@@ -7,13 +7,14 @@ import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
 import VisitUs from './pages/VisitUs';
 import About from './pages/About';
+import './index.css';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-soft-beige">
         <Navbar />
-        <main className="flex-grow">
+        <main>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
