@@ -1,99 +1,209 @@
-import React, { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { products, categories } from '../data/products';
+import { productsAPI } from '../services/api';
+import { useCart } from '../context/CartContext';
+import toast from 'react-hot-toast';
 
 const Shop = () => {
-  const [searchParams] = useSearchParams();
-  const categoryFilter = searchParams.get('category');
-  const [selectedCategory, setSelectedCategory] = useState(categoryFilter || 'all');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const { addToCart } = useCart();
 
-  const filteredProducts = selectedCategory === 'all'
-    ? products
-    : products.filter(product => product.category === selectedCategory);
+  const categories = [
+    { value: '', label: 'Të Gjitha' },
+    { value: 'Dekor', label: 'Dekor' },
+    { value: 'Kuzhina', label: 'Kuzhina' },
+    { value: 'Banjo', label: 'Banjo' },
+    { value: 'Dhoma', label: 'Dhoma' },
+    { value: 'Kopsht', label: 'Kopsht' },
+    { value: 'Të tjera', label: 'Të tjera' },
+  ];
+
+  const sortOptions = [
+    { value: 'newest', label: 'Më të Rejat' },
+    { value: 'price-low', label: 'Çmimi: Nga më i Uli' },
+    { value: 'price-high', label: 'Çmimi: Nga më i Shtrenjti' },
+  ];
+
+  useEffect(() => {
+    fetchProducts();
+  }, [selectedCategory, searchTerm, sortBy]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        category: selectedCategory,
+        search: searchTerm,
+        sort: sortBy,
+      };
+      
+      const response = await productsAPI.getAll(params);
+      setProducts(response.data.products || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Gabim në ngarkimin e produkteve');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart(product, 1);
+  };
+
+  if (loading) {
+    return (
+      <div className="pt-20 min-h-screen bg-soft-beige">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-olive-green mx-auto"></div>
+            <p className="mt-4 text-gray-600">Duke ngarkuar produktet...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="pt-20">
+    <div className="pt-20 min-h-screen bg-soft-beige">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="section-title text-center mb-12">Dyqani Ynë</h1>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="section-title text-center mb-12">Dyqani Ynë</h1>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-md ${
-              selectedCategory === 'all'
-                ? 'bg-olive-green text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Të Gjitha
-          </button>
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.name)}
-              className={`px-4 py-2 rounded-md ${
-                selectedCategory === category.name
-                  ? 'bg-olive-green text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
+          {/* Filters and Search */}
+          <div className="mb-8 space-y-4">
+            {/* Search */}
+            <div className="max-w-md mx-auto">
+              <input
+                type="text"
+                placeholder="Kërko produkte..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-olive-green focus:border-transparent"
+              />
+            </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.05 }}
-              className="product-card"
-            >
-              <div className="relative h-[400px]">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-playfair mb-2">{product.name}</h3>
-                <p className="text-gray-600 mb-4">{product.description}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {product.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 bg-soft-beige text-gray-700 rounded-md text-sm"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  to={`/product/${product.id}`}
-                  className="text-olive-green hover:underline"
+            {/* Filters */}
+            <div className="flex flex-wrap justify-center gap-4">
+              {/* Category Filter */}
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-olive-green focus:border-transparent"
+              >
+                {categories.map((category) => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+
+              {/* Sort Filter */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-olive-green focus:border-transparent"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Products Grid */}
+          {products.length === 0 ? (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Nuk u gjetën produkte
+              </h3>
+              <p className="text-gray-600">
+                Provoni të ndryshoni filtrat ose kërkimin tuaj.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <motion.div
+                  key={product._id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
                 >
-                  Shiko më shumë →
-                </Link>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                  <Link to={`/product/${product._id}`}>
+                    <img
+                      src={`http://localhost:5000${product.images[0]}`}
+                      alt={product.name}
+                      className="w-full h-64 object-cover rounded-t-lg"
+                    />
+                  </Link>
+                  
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {product.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-2">{product.category}</p>
+                    <p className="text-lg font-bold text-olive-green mb-3">
+                      €{product.price.toFixed(2)}
+                    </p>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">
+                        {product.stock > 0 ? `${product.stock} në stok` : 'Jashtë stokit'}
+                      </span>
+                      
+                      <div className="flex space-x-2">
+                        <Link
+                          to={`/product/${product._id}`}
+                          className="px-3 py-1 text-sm border border-olive-green text-olive-green rounded hover:bg-olive-green hover:text-white transition-colors duration-200"
+                        >
+                          Shiko
+                        </Link>
+                        
+                        {product.stock > 0 && (
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            className="px-3 py-1 text-sm bg-olive-green text-white rounded hover:bg-olive-dark transition-colors duration-200"
+                          >
+                            Shto
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
-        {/* Visit Store CTA */}
-        <div className="mt-16 text-center">
-          <p className="text-gray-600 mb-4">
-            Për të parë koleksionin tonë të plotë, ju lutemi na vizitoni në dyqanin tonë.
-          </p>
-          <Link to="/visit-us" className="btn-primary">
-            Gjej Adresën Tonë
-          </Link>
-        </div>
+          {/* Call to Action */}
+          <div className="mt-16 text-center">
+            <h2 className="text-2xl font-playfair text-olive-green mb-4">
+              Dëshironi të na vizitoni në dyqan?
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Të gjitha produktet tona janë të zgjedhura me kujdes për cilësinë e tyre
+            </p>
+            <Link
+              to="/visit-us"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-olive-green hover:bg-olive-dark transition-colors duration-200"
+            >
+              Gjej Adresën Tonë
+            </Link>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
