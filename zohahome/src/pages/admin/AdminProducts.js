@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { productsAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { FaStar } from 'react-icons/fa';
 
 const initialForm = {
   name: '',
@@ -89,6 +90,16 @@ const AdminProducts = () => {
       toast.error(errorMessage);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleToggleFeatured = async (product) => {
+    try {
+      await productsAPI.update(product._id, { featured: !product.featured });
+      toast.success(`Produkti u ${product.featured ? 'hoq nga' : 'shtua në'} të veçuarat!`);
+      fetchProducts();
+    } catch (err) {
+      toast.error('Gabim gjatë ndryshimit të statusit të veçuar');
     }
   };
 
@@ -196,6 +207,7 @@ const AdminProducts = () => {
                   <th className="px-4 py-2">Çmimi</th>
                   <th className="px-4 py-2">Stoku</th>
                   <th className="px-4 py-2">Imazhi</th>
+                  <th className="px-4 py-2">I veçuar</th>
                 </tr>
               </thead>
               <tbody>
@@ -213,6 +225,16 @@ const AdminProducts = () => {
                           className="h-12 w-12 object-cover rounded"
                         />
                       )}
+                    </td>
+                    <td className="px-4 py-2 text-center">
+                      <button
+                        onClick={() => handleToggleFeatured(product)}
+                        className={`text-2xl transition-colors duration-200 ${product.featured ? 'text-pastel-pink' : 'text-gray-300 hover:text-pastel-pink'}`}
+                        title={product.featured ? 'Hiq nga të veçuarat' : 'Shto në të veçuarat'}
+                        aria-label={product.featured ? 'Hiq nga të veçuarat' : 'Shto në të veçuarat'}
+                      >
+                        <FaStar />
+                      </button>
                     </td>
                   </tr>
                 ))}
