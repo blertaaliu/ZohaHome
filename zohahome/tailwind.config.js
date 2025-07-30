@@ -8,7 +8,8 @@ module.exports = {
       colors: {
         'soft-beige': '#f9f5f1',
         'pastel-pink': '#ffd1dc',
-        'olive-green': '#808000',
+        'gold': '#C9A14A',
+        'dark-gray': '#222',
         'light-brown': '#d2b48c',
       },
       fontFamily: {

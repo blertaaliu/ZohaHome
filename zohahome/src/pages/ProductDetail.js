@@ -3,12 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { productsAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import { useCart } from '../context/CartContext';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const { addToCart } = useCart();
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -106,16 +109,49 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            {/* Visit Store CTA */}
-            <div className="mt-auto">
-              <p className="text-gray-600 mb-4">
-                Për të parë këtë produkt dhe koleksionin tonë të plotë,
-                ju lutemi na vizitoni në dyqanin tonë.
-              </p>
-              <Link to="/visit-us" className="btn-primary">
-                Gjej Adresën Tonë
-              </Link>
-            </div>
+            {/* Dimensions */}
+            {product.dimensions && (product.dimensions.length || product.dimensions.width || product.dimensions.height) && (
+              <div className="mb-6">
+                <span className="text-gray-600">Përmasat:</span>
+                <span className="ml-2 font-medium text-dark-gray">
+                  {product.dimensions.length ? `${product.dimensions.length} x ` : ''}
+                  {product.dimensions.width ? `${product.dimensions.width}` : ''}
+                  {(product.dimensions.length || product.dimensions.width) && product.dimensions.height ? ` x ${product.dimensions.height}` : ''}
+                  {(product.dimensions.length || product.dimensions.width || product.dimensions.height) ? ' cm' : ''}
+                </span>
+              </div>
+            )}
+
+            {product.stock > 0 && (
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center border border-gold rounded">
+                  <button
+                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    className="px-3 py-1 text-lg font-bold text-gold hover:text-dark-gray focus:outline-none"
+                    aria-label="Ul sasinë"
+                  >
+                    -
+                  </button>
+                  <span className="px-4 py-1 text-lg font-semibold text-dark-gray select-none">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+                    className="px-3 py-1 text-lg font-bold text-gold hover:text-dark-gray focus:outline-none"
+                    aria-label="Rrit sasinë"
+                  >
+                    +
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    addToCart(product, quantity);
+                    toast.success('Produkti u shtua në shportë!');
+                  }}
+                  className="bg-gold text-white px-6 py-3 rounded-md font-semibold shadow hover:bg-pastel-pink hover:text-dark-gray transition-colors duration-200"
+                >
+                  Shto në Shportë
+                </button>
+              </div>
+            )}
           </motion.div>
         </div>
 

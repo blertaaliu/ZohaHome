@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { categories } from '../data/products';
 import ballinaImage from '../assets/images/ballina.jpg';
+import { FaStar, FaMapMarkerAlt, FaViber, FaTruck, FaEnvelope } from 'react-icons/fa';
+import storeImage from '../assets/images/dekor.jpg';
+import { productsAPI } from '../services/api';
 
 const Home = () => {
   const [currentImage, setCurrentImage] = useState(0);
@@ -11,6 +14,7 @@ const Home = () => {
   const opacity = useTransform(scrollY, [0, 200], [1, 0.8]);
 
   const heroImages = [ballinaImage];
+  const [featured, setFeatured] = useState([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -18,6 +22,12 @@ const Home = () => {
     }, 6000);
     return () => clearInterval(interval);
   }, [heroImages.length]);
+
+  useEffect(() => {
+    productsAPI.getFeatured().then(res => {
+      setFeatured(res.data);
+    });
+  }, []);
 
   return (
     <div className="overflow-hidden">
@@ -137,19 +147,6 @@ const Home = () => {
                       →
                     </motion.span>
                   </span>
-                </Link>
-              </motion.div>
-              
-              <motion.div
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.95 }}
-                className="group"
-              >
-                <Link
-                  to="/visit-us"
-                  className="inline-block bg-transparent text-white text-lg px-10 py-4 rounded-full border-2 border-white/50 hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
-                >
-                  Na Vizitoni
                 </Link>
               </motion.div>
             </motion.div>
@@ -287,63 +284,92 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Visit Us Section */}
-      <section className="py-24 px-4 bg-gradient-to-br from-soft-beige via-white to-soft-beige relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-20 w-32 h-32 bg-olive-green rounded-full"></div>
-          <div className="absolute top-40 right-32 w-24 h-24 bg-olive-green rounded-full"></div>
-          <div className="absolute bottom-32 left-32 w-20 h-20 bg-olive-green rounded-full"></div>
-        </div>
-        
-        <div className="max-w-6xl mx-auto text-center relative z-10">
+      {/* Featured Products Section */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
             viewport={{ once: true }}
+            className="text-center mb-20"
           >
-            <motion.h2 
-              className="section-title text-4xl md:text-5xl mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              Na Vizitoni në Dyqan
-            </motion.h2>
-            <motion.p 
-              className="text-gray-600 mb-12 max-w-3xl mx-auto text-lg leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              viewport={{ once: true }}
-            >
-              Për të parë koleksionin tonë të plotë dhe për të marrë këshilla nga ekspertët tanë,
-              ju lutemi na vizitoni në dyqanin tonë.
-            </motion.p>
-            <motion.div
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-block"
-            >
-              <Link 
-                to="/visit-us" 
-                className="bg-gradient-to-r from-olive-green to-green-600 text-white text-lg px-12 py-5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
-              >
-                <span className="flex items-center justify-center">
-                  Gjej Adresën Tonë
-                  <motion.span
-                    initial={{ x: 0 }}
-                    whileHover={{ x: 5 }}
-                    className="ml-2"
-                  >
-                    📍
-                  </motion.span>
-                </span>
-              </Link>
-            </motion.div>
+            <h2 className="section-title text-4xl md:text-5xl mb-4">Produktet e Veçuara</h2>
+            <p className="text-lg text-gray-600">Zbuloni zgjedhjet tona më të mira për ju</p>
           </motion.div>
+          <div className="flex gap-8 overflow-x-auto pb-4">
+            {featured.length === 0 ? (
+              <div className="text-gray-400 text-lg mx-auto">Nuk ka produkte të veçuara aktualisht.</div>
+            ) : (
+              featured.map((product) => (
+                <motion.div
+                  key={product._id}
+                  whileHover={{ scale: 1.05 }}
+                  className="min-w-[260px] bg-soft-beige rounded-lg shadow-md p-6 flex flex-col items-center"
+                >
+                  <Link to={`/product/${product._id}`} className="w-full flex flex-col items-center">
+                    <img
+                      src={`http://localhost:5000${product.images[0]}`}
+                      alt={product.name}
+                      className="w-40 h-40 object-cover rounded-lg mb-4"
+                    />
+                    <h3 className="font-semibold text-lg mb-2 text-center">{product.name}</h3>
+                  </Link>
+                  <p className="text-olive-green font-bold mb-2">€{product.price.toFixed(2)}</p>
+                  <Link
+                    to={`/product/${product._id}`}
+                    className="bg-olive-green text-white px-4 py-2 rounded hover:bg-olive-dark transition-colors duration-200 mt-2"
+                  >
+                    Shiko Produktin
+                  </Link>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 px-4 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="section-title text-4xl md:text-5xl mb-4">Çfarë thonë klientët tanë?</h2>
+            <p className="text-lg text-gray-600">Disa nga përshtypjet e klientëve tanë të kënaqur</p>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[{
+              name: 'Arta',
+              text: 'Produktet janë të mrekullueshme dhe shërbimi ishte shumë i shpejtë!',
+              rating: 5
+            }, {
+              name: 'Blerim',
+              text: 'Cilësi e lartë dhe dizajn modern. Do të blej sërish!',
+              rating: 4
+            }, {
+              name: 'Elira',
+              text: 'Shumë e kënaqur me blerjen time. Rekomandoj Zoha Home!',
+              rating: 5
+            }].map((t, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ scale: 1.03 }}
+                className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center"
+              >
+                <div className="flex mb-2">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <FaStar key={i} className="text-pastel-pink mr-1" />
+                  ))}
+                </div>
+                <p className="text-gray-700 mb-4">"{t.text}"</p>
+                <span className="font-semibold text-olive-green">- {t.name}</span>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
     </div>

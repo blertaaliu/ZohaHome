@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { productsAPI } from '../services/api';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
+import { FaHeart } from 'react-icons/fa';
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -12,6 +13,7 @@ const Shop = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const { addToCart } = useCart();
+  const [wishlist, setWishlist] = useState([]);
 
   const categories = [
     { value: '', label: 'Të Gjitha' },
@@ -54,6 +56,16 @@ const Shop = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product, 1);
+  };
+
+  const handleWishlist = (product) => {
+    if (!wishlist.includes(product._id)) {
+      setWishlist([...wishlist, product._id]);
+      toast.success('U shtua në të preferuarat!');
+    } else {
+      setWishlist(wishlist.filter(id => id !== product._id));
+      toast('U hoq nga të preferuarat.');
+    }
   };
 
   if (loading) {
@@ -140,8 +152,16 @@ const Shop = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 relative"
                 >
+                  {/* Wishlist Button */}
+                  <button
+                    onClick={() => handleWishlist(product)}
+                    className={`absolute top-3 right-3 z-10 p-2 rounded-full bg-white/80 hover:bg-pastel-pink transition-colors duration-200 border border-gray-200 ${wishlist.includes(product._id) ? 'text-pastel-pink' : 'text-gray-400'}`}
+                    aria-label={wishlist.includes(product._id) ? 'Hiq nga të preferuarat' : 'Shto në të preferuarat'}
+                  >
+                    <FaHeart />
+                  </button>
                   <Link to={`/product/${product._id}`}>
                     <img
                       src={`http://localhost:5000${product.images[0]}`}
@@ -164,10 +184,11 @@ const Shop = () => {
                         {product.stock > 0 ? `${product.stock} në stok` : 'Jashtë stokit'}
                       </span>
                       
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 mt-2">
                         <Link
                           to={`/product/${product._id}`}
-                          className="px-3 py-1 text-sm border border-olive-green text-olive-green rounded hover:bg-olive-green hover:text-white transition-colors duration-200"
+                          className="px-3 py-1 text-sm border border-olive-green text-olive-green rounded hover:bg-gold hover:text-white transition-colors duration-200"
+                          aria-label="Shiko produktin"
                         >
                           Shiko
                         </Link>
@@ -175,7 +196,8 @@ const Shop = () => {
                         {product.stock > 0 && (
                           <button
                             onClick={() => handleAddToCart(product)}
-                            className="px-3 py-1 text-sm bg-olive-green text-white rounded hover:bg-olive-dark transition-colors duration-200"
+                            className="px-3 py-1 text-sm bg-olive-green text-white rounded hover:bg-olive-dark transition-colors duration-200 shadow-sm"
+                            aria-label="Shto në shportë"
                           >
                             Shto
                           </button>
@@ -187,22 +209,6 @@ const Shop = () => {
               ))}
             </div>
           )}
-
-          {/* Call to Action */}
-          <div className="mt-16 text-center">
-            <h2 className="text-2xl font-playfair text-olive-green mb-4">
-              Dëshironi të na vizitoni në dyqan?
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Të gjitha produktet tona janë të zgjedhura me kujdes për cilësinë e tyre
-            </p>
-            <Link
-              to="/visit-us"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-olive-green hover:bg-olive-dark transition-colors duration-200"
-            >
-              Gjej Adresën Tonë
-            </Link>
-          </div>
         </motion.div>
       </div>
     </div>
